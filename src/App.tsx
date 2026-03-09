@@ -48,7 +48,10 @@ export default function App() {
   const [isNickSet, setIsNickSet] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [stream, setStream] = useState<MediaStream | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -57,6 +60,34 @@ export default function App() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream, isStreaming]);
+
+  const startStream = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 1280, height: 720 },
+        audio: true
+      });
+      setStream(mediaStream);
+      setIsStreaming(true);
+    } catch (err) {
+      console.error("Error accessing media devices.", err);
+      alert("Não foi possível acessar a câmera ou microfone. Verifique as permissões.");
+    }
+  };
+
+  const stopStream = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+      setIsStreaming(false);
+    }
+  };
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,28 +160,65 @@ export default function App() {
         {/* Live Stream Area (Turquoise) */}
         <div className="lg:col-span-3 flex flex-col gap-4">
           <div className="relative aspect-video bg-turquoise rounded-2xl overflow-hidden shadow-2xl border-4 border-black group">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center">
-                <Tv className="w-20 h-20 text-white/50 mb-4 mx-auto animate-pulse" />
-                <p className="text-white font-bold text-xl uppercase tracking-widest">Aguardando Transmissão...</p>
+            {isStreaming ? (
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <Tv className="w-20 h-20 text-white/50 mb-4 mx-auto animate-pulse" />
+                  <p className="text-white font-bold text-xl uppercase tracking-widest">Aguardando Transmissão...</p>
+                </div>
               </div>
-            </div>
+            )}
             
             {/* Overlay Info */}
             <div className="absolute top-4 left-4 flex items-center gap-2">
-              <div className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                AO VIVO
-              </div>
+              {isStreaming ? (
+                <div className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
+                  <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                  AO VIVO
+                </div>
+              ) : (
+                <div className="bg-zinc-800 text-white text-xs font-bold px-2 py-1 rounded">
+                  OFFLINE
+                </div>
+              )}
               <div className="bg-black/50 backdrop-blur-md text-white text-xs px-2 py-1 rounded">
-                1,234 assistindo
+                {isStreaming ? "1,234 assistindo" : "0 assistindo"}
               </div>
             </div>
           </div>
           
-          <div className="bg-zinc-900/50 backdrop-blur-md p-6 rounded-2xl border border-zinc-800">
-            <h1 className="text-2xl font-bold text-white mb-2">Minha Live Incrível</h1>
-            <p className="text-zinc-400 text-sm">Bem-vindo à transmissão! Sinta-se em casa e use o chat ao lado para interagir.</p>
+          <div className="bg-zinc-900/50 backdrop-blur-md p-6 rounded-2xl border border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-white mb-2">Minha Live Incrível</h1>
+              <p className="text-zinc-400 text-sm">Bem-vindo à transmissão! Sinta-se em casa e use o chat ao lado para interagir.</p>
+            </div>
+            
+            <div className="flex gap-3">
+              {!isStreaming ? (
+                <button
+                  onClick={startStream}
+                  className="bg-red-600 hover:bg-red-500 text-white font-bold px-6 py-3 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-red-600/20"
+                >
+                  <Tv className="w-5 h-5" />
+                  Abrir Live
+                </button>
+              ) : (
+                <button
+                  onClick={stopStream}
+                  className="bg-zinc-700 hover:bg-zinc-600 text-white font-bold px-6 py-3 rounded-xl transition-all flex items-center gap-2"
+                >
+                  Encerrar Live
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
