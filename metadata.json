@@ -1,0 +1,5 @@
+{
+  "name": "LiveStream Chat",
+  "description": "A live streaming platform with real-time chat and a starry night theme.",
+  "requestFramePermissions": ["camera", "microphone"]
+}

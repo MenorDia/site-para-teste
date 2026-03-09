@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme {
+  --color-turquoise: #00AEEF;
+  --color-chat-green: #22B14C;
+}
+
+@layer base {
+  body {
+    @apply bg-black overflow-hidden;
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.star {
+  @apply absolute bg-white rounded-full;
+  animation: twinkle var(--duration) ease-in-out infinite;
+  opacity: 0.3;
+}
+
+.starry-bg {
+  @apply fixed inset-0 bg-black z-[-1];
+}
